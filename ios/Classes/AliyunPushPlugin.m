@@ -91,7 +91,7 @@ static BOOL logEnable = NO;
         } else {
             PushLogD(@"Register deviceToken failed, error: %@", res.error);
             NSMutableDictionary *dic = [NSMutableDictionary dictionary];
-            [dic setValue:res.error forKey:@"error"];
+            // [dic setValue:res.error forKey:@"error"];
             [self.channel invokeMethod:@"onRegisterDeviceTokenFailed" arguments:dic];
         }
     }];

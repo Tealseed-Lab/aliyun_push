@@ -12,6 +12,9 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
+
+import java.util.Locale;
 
 /**
  * @author wangyun
@@ -42,6 +45,32 @@ public class AliyunThirdPushUtils {
 		return null;
 	}
 
+
+	/**
+	 * 当前设备是不是这些品牌之一。
+	 *
+	 * 厂商辅助通道只在自家 ROM 上才建立得起长连接：在 OPPO 手机上注册小米推送，
+	 * 除了拿不到 token 之外没有任何作用。但注册这一下并非无害——小米 SDK 在注册
+	 * 过程中会连续读取设备序列号（Build.getSerial → ro.serialno），隐私合规检测
+	 * 会判定为「第三方 SDK 超频次获取相关信息」。
+	 *
+	 * 实测（OPPO 安全隐私自动化检测，敲敲 2.12.0，2026-09-06）：一次注册里 80ms
+	 * 内读了 6 次序列号，检测项 2.5 因此不通过。
+	 *
+	 * 判断用 BRAND 与 MANUFACTURER 拼起来匹配：子品牌（Redmi、iQOO、realme 等）
+	 * 在这两个字段里的取值并不一致，只看其一会漏。
+	 */
+	private static boolean isBrand(String... keywords) {
+		String identity = ((Build.BRAND == null ? "" : Build.BRAND) + " "
+			+ (Build.MANUFACTURER == null ? "" : Build.MANUFACTURER)).toLowerCase(Locale.ROOT);
+		for (String keyword : keywords) {
+			if (identity.contains(keyword)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void registerGCM(Application application) {
 		String sendId = getGCMSendId(application);
 		String applicationId = getGCMApplicationId(application);
@@ -70,6 +99,10 @@ public class AliyunThirdPushUtils {
 	}
 
 	public static void registerMeizuPush(Application application) {
+		// 非魅族设备直接返回，见 isBrand 的说明。
+		if (!isBrand("meizu")) {
+			return;
+		}
 		String meizuId = getMeizuPushId(application);
 		String meizuKey = getMeizuPushKey(application);
 
@@ -87,6 +120,10 @@ public class AliyunThirdPushUtils {
 	}
 
 	public static void registerOppoPush(Application application) {
+		// 非OPPO 系设备直接返回，见 isBrand 的说明。
+		if (!isBrand("oppo", "oneplus", "realme")) {
+			return;
+		}
 		String oppoKey = getOppoPushKey(application);
 		String oppoSecret = getOppoPushSecret(application);
 
@@ -104,6 +141,10 @@ public class AliyunThirdPushUtils {
 	}
 
 	public static void registerXiaoMiPush(Application application) {
+		// 非小米系设备直接返回，见 isBrand 的说明。
+		if (!isBrand("xiaomi", "redmi", "poco")) {
+			return;
+		}
 		String xiaoMiId = getXiaoMiId(application);
 		String xiaoMiKey = getXiaoMiKey(application);
 
@@ -121,6 +162,10 @@ public class AliyunThirdPushUtils {
 	}
 
 	public static  void registerVivoPush(Application application) {
+		// 非vivo 系设备直接返回，见 isBrand 的说明。
+		if (!isBrand("vivo", "iqoo")) {
+			return;
+		}
 		String vivoApiKey = getVivoApiKey(application);
 		String vivoAppId = getVivoAppId(application);
 		if (vivoApiKey != null && vivoAppId != null) {
@@ -138,6 +183,10 @@ public class AliyunThirdPushUtils {
 
 
 	public static void registerHuaweiPush(Application application) {
+		// 非华为设备直接返回，见 isBrand 的说明。
+		if (!isBrand("huawei")) {
+			return;
+		}
 		String huaweiAppId = getHuaWeiAppId(application);
 		if (huaweiAppId != null) {
 			HuaWeiRegister.register(application);
@@ -153,6 +202,10 @@ public class AliyunThirdPushUtils {
 	}
 
 	public static void registerHonorPush(Application application) {
+		// 非荣耀设备直接返回，见 isBrand 的说明。
+		if (!isBrand("honor")) {
+			return;
+		}
 		String honorAppId = getHonorAppId(application);
 		if (honorAppId != null) {
 			HonorRegister.register(application);
